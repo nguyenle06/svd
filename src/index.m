@@ -1,1 +1,1 @@
-display("Hello, World! From Matlab");
+system('python my_file.py');
