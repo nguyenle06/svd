@@ -27,7 +27,7 @@ function [U, S, V] = custom_svd(A)
 
     % Step 6: Compute U
     % Formula: u_i = (1/\sigma_i) * A * v_i
-    U = zeros(m, n);
+    U = zeros(m, m);
     for i = 1:n
         if singular(i) > 1e-10 % Avoid division by zero
             U(:, i) = (1/singular(i)) * A * V(:, i);
@@ -36,4 +36,12 @@ function [U, S, V] = custom_svd(A)
 
     % Step 7: Complete orthonormal basis (QR decomposition - make U from almost orthogonal to fully orthogonal)
     [U, ~] = qr(U);
+
+    % Step 8: Recompute V from U after QR decomposition to stay consistent
+    % Formula: v_i = (1/sigma_i) * A^T * u_i
+    for i = 1:k
+        if singular(i) > 1e-10
+            V(:, i) = A' * U(:, i) / singular(i);
+        end
+    end
 end
