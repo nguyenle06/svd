@@ -1,7 +1,7 @@
 % =========================
 % SVD Image Compression MATLAB Version
 % =========================
-function svd_image_compression()
+function index()
     image_path = "assets/input/01_landscape.jpg";
     try
         img_data = imread(image_path);
@@ -20,7 +20,7 @@ function svd_image_compression()
         mkdir(output_dir);
     end
 
-    k_values = [5, 20, 50, 100];
+    k_values = [1, 5, 10, 20];
     errors = zeros(size(k_values));
     data_ratios = zeros(size(k_values));
     reconstructed_images = cell(size(k_values));
@@ -66,8 +66,6 @@ function svd_image_compression()
     title("Trade-off Analysis: Image Quality vs Data Reduction");
     grid on;
     drawnow;
-
-    pause;
 end
 
 function reconstructed = compress_channel_svd(channel, k)
