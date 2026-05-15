@@ -1,8 +1,28 @@
 % =========================
 % SVD Image Compression MATLAB Version
 % =========================
-function index()
-    image_path = "assets/input/04_painting.avif";
+function svd_image_compression(image_paths)
+    % Default list if no input given
+    if nargin < 1
+        image_paths = {
+            "assets/input/01_landscape.jpg", ...
+            "assets/input/02_dog.jpeg", ...
+            "assets/input/03_color.png"
+        };
+    end
+
+    % Loop over each image
+    for f = 1:length(image_paths)
+        image_path = image_paths{f};
+        fprintf("\n========== Processing: %s ==========\n", image_path);
+        process_single_image(image_path);
+    end
+end
+
+% =========================
+% Process one image
+% =========================
+function process_single_image(image_path)
     try
         img_data = imread(image_path);
         img_data = imresize(img_data, 0.25);
@@ -35,27 +55,26 @@ function index()
         fprintf("Rank k = %-3d | Error: %8.2f | Data: %5.2f%%\n", ...
             k, errors(i), data_ratios(i));
 
-        % Save compressed image → assets/output/01_landscape_k5.jpg
+        % Save compressed image
         output_path = sprintf("%s/%s_k%d%s", output_dir, name, k, ext);
         imwrite(img_k, output_path);
         fprintf("Saved: %s\n", output_path);
     end
 
     % Visualization: images
-    figure('visible', 'on');
+    figure('visible', 'on', 'Name', name);
     subplot(2,3,1);
     imshow(img_original);
-    title("Original Image");
+    title("Original: " + name);
     for i = 1:length(k_values)
         subplot(2,3,i+1);
         imshow(reconstructed_images{i});
-        title(sprintf("Processed (k=%d)\nData Retained: %.1f%%", ...
-            k_values(i), data_ratios(i)));
+        title(sprintf("k=%d | Data: %.1f%%", k_values(i), data_ratios(i)));
     end
     drawnow;
 
     % Trade-off plot
-    figure('visible', 'on');
+    figure('visible', 'on', 'Name', name + " Trade-off");
     yyaxis left
     plot(k_values, errors, '-or', 'LineWidth', 2);
     ylabel("Frobenius Error");
@@ -63,16 +82,22 @@ function index()
     plot(k_values, data_ratios, '--sb', 'LineWidth', 2);
     ylabel("Data Storage Retained (%)");
     xlabel("Rank (k values)");
-    title("Trade-off Analysis: Image Quality vs Data Reduction");
+    title("Trade-off: " + name);
     grid on;
     drawnow;
 end
 
+% =========================
+% Compress single channel
+% =========================
 function reconstructed = compress_channel_svd(channel, k)
     [U, S, V] = svd(channel, 'econ');
     reconstructed = U(:,1:k) * S(1:k,1:k) * V(:,1:k)';
 end
 
+% =========================
+% Compress image
+% =========================
 function reconstructed_img = compress_image_svd(image, k)
     if ndims(image) == 3
         r = compress_channel_svd(image(:,:,1), k);
@@ -85,11 +110,17 @@ function reconstructed_img = compress_image_svd(image, k)
     reconstructed_img = min(max(reconstructed_img, 0), 1);
 end
 
+% =========================
+% Frobenius error
+% =========================
 function err = calculate_frobenius_error(original, reconstructed)
     diff = original - reconstructed;
     err = sqrt(sum(diff(:).^2));
 end
 
+% =========================
+% Data retention ratio
+% =========================
 function ratio = calculate_data_retention(shape, k)
     m = shape(1); n = shape(2);
     channels = 1;
